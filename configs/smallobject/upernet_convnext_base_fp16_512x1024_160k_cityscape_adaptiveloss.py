@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/cityscapes_512x512.py',
+    '../_base_/datasets/cityscapes.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
 crop_size = (512, 1024)
@@ -20,7 +20,7 @@ model = dict(
             type='Pretrained', checkpoint=checkpoint_file,
             prefix='backbone.')),
     decode_head=dict(
-        type='SMOHead',
+        type='UPerHead',
         in_channels=[128, 256, 512, 1024],
         in_index=[0, 1, 2, 3],
         pool_scales=(1, 2, 3, 6),
