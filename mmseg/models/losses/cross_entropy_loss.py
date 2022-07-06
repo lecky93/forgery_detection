@@ -370,7 +370,7 @@ class AdaptiveCELoss(nn.Module):
 
         # clculate adaptive class weight
         batch_size, num_class, H, W = cls_score.shape
-        class_weight = torch.zeros((num_class,)).cuda()
+        class_weight = torch.zeros((num_class,)).to(label.device)
         for class_id in range(num_class):
             custem_label = label.clone().detach()
             custem_label[custem_label != class_id] = 0
