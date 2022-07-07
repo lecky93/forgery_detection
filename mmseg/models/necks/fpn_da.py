@@ -8,27 +8,42 @@ from ..builder import NECKS
 
 import torch
 from mmcv.cnn import ConvModule, Scale
+from ..utils import SelfAttentionBlock as _SelfAttentionBlock
 
-class PAM(nn.Module):
-    """ Position attention module"""
+class PAM(_SelfAttentionBlock):
+    """Position Attention Module (PAM)
 
-    def __init__(self, in_channels):
-        super(PAM, self).__init__()
-        self.conv_b = nn.Conv2d(in_channels, in_channels // 8, 1)
-        self.conv_c = nn.Conv2d(in_channels, in_channels // 8, 1)
-        self.conv_d = nn.Conv2d(in_channels, in_channels, 1)
-        self.alpha = nn.Parameter(torch.zeros(1))
-        self.softmax = nn.Softmax(dim=-1)
+    Args:
+        in_channels (int): Input channels of key/query feature.
+        channels (int): Output channels of key/query transform.
+    """
+
+    def __init__(self, in_channels, channels):
+        super(PAM, self).__init__(
+            key_in_channels=in_channels,
+            query_in_channels=in_channels,
+            channels=channels,
+            out_channels=in_channels,
+            share_key_query=False,
+            query_downsample=None,
+            key_downsample=None,
+            key_query_num_convs=1,
+            key_query_norm=False,
+            value_out_num_convs=1,
+            value_out_norm=False,
+            matmul_norm=False,
+            with_out=False,
+            conv_cfg=None,
+            norm_cfg=None,
+            act_cfg=None)
+
+        self.gamma = Scale(0)
 
     def forward(self, x):
-        batch_size, _, height, width = x.size()
-        feat_b = self.conv_b(x).view(batch_size, -1, height * width).permute(0, 2, 1)
-        feat_c = self.conv_c(x).view(batch_size, -1, height * width)
-        attention_s = self.softmax(torch.bmm(feat_b, feat_c))
-        feat_d = self.conv_d(x).view(batch_size, -1, height * width)
-        feat_e = torch.bmm(feat_d, attention_s.permute(0, 2, 1)).view(batch_size, -1, height, width)
-        out = self.alpha * feat_e + x
+        """Forward function."""
+        out = super(PAM, self).forward(x, x)
 
+        out = self.gamma(out) + x
         return out
 
 
@@ -67,7 +82,7 @@ class DA(nn.Module):
         pam_channels (int): The channels of Position Attention Module(PAM).
     """
 
-    def __init__(self, in_channels, channels, conv_cfg=None, norm_cfg=None, act_cfg=None, **kwargs):
+    def __init__(self, in_channels, channels, pam_channels, conv_cfg=None, norm_cfg=None, act_cfg=None, **kwargs):
         super(DA, self).__init__()
 
         self.in_channels = in_channels
@@ -85,7 +100,7 @@ class DA(nn.Module):
             conv_cfg=self.conv_cfg,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
-        self.pam = PAM(self.channels)
+        self.pam = PAM(self.channels, pam_channels)
         self.pam_out_conv = ConvModule(
             self.channels,
             self.channels,
@@ -187,6 +202,7 @@ class FPN_DA(BaseModule):
                  in_channels,
                  out_channels,
                  num_outs,
+                 pam_channels=64,
                  start_level=0,
                  end_level=-1,
                  add_extra_convs=False,
@@ -237,29 +253,32 @@ class FPN_DA(BaseModule):
         self.fpn_convs = nn.ModuleList()
 
         for i in range(self.start_level, self.backbone_end_level):
-            l_conv = ConvModule(
-                in_channels[i],
+            if i >= self.backbone_end_level-1:
+                l_conv = DA(
+                    in_channels[i],
+                    out_channels,
+                    pam_channels,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg)
+            else:
+                l_conv = ConvModule(
+                    in_channels[i],
+                    out_channels,
+                    1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
+                    act_cfg=act_cfg,
+                    inplace=False)
+            fpn_conv = ConvModule(
                 out_channels,
-                1,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
-                act_cfg=act_cfg,
-                inplace=False)
-            # fpn_conv = ConvModule(
-            #     out_channels,
-            #     out_channels,
-            #     3,
-            #     padding=1,
-            #     conv_cfg=conv_cfg,
-            #     norm_cfg=norm_cfg,
-            #     act_cfg=act_cfg,
-            #     inplace=False)
-            fpn_conv = DA(
                 out_channels,
-                out_channels,
+                3,
+                padding=1,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
-                act_cfg=act_cfg)
+                act_cfg=act_cfg,
+                inplace=False)
 
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
