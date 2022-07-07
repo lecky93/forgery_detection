@@ -1,8 +1,8 @@
 _base_ = [
-    '../_base_/datasets/cityscapes.py',
+    '../_base_/datasets/cityscapes_768x768.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
-crop_size = (512, 1024)
+crop_size = (768, 768)
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 custom_imports = dict(imports='mmcls.models', allow_failed_imports=False)
 checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_32xb128-noema_in1k_20220301-2a0ee547.pth'  # noqa
