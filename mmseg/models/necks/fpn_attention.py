@@ -544,9 +544,9 @@ class FPN_Attention(BaseModule):
         for i in range(self.start_level, self.backbone_end_level):
 
             l_conv = SwinBlockSequence(
-                embed_dims=in_channels,
+                embed_dims=in_channels[i],
                 num_heads=num_heads[i],
-                feedforward_channels=int(mlp_ratio * in_channels),
+                feedforward_channels=int(mlp_ratio * in_channels[i]),
                 depth=depths[i],
                 window_size=window_size,
                 qkv_bias=qkv_bias,
@@ -561,7 +561,7 @@ class FPN_Attention(BaseModule):
                 init_cfg=None)
 
             fpn_conv = ConvModule(
-                out_channels,
+                in_channels[i],
                 out_channels,
                 3,
                 padding=1,
