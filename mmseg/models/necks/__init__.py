@@ -7,6 +7,8 @@ from .mla_neck import MLANeck
 from .multilevel_neck import MultiLevelNeck
 
 from .fpn_da import FPN_DA
+
+from .fpn_attention import FPN_Attention
 __all__ = [
     'FPN', 'MultiLevelNeck', 'MLANeck', 'ICNeck', 'JPU', 'Feature2Pyramid'
 ]
