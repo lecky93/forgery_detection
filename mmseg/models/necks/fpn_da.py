@@ -253,23 +253,14 @@ class FPN_DA(BaseModule):
         self.fpn_convs = nn.ModuleList()
 
         for i in range(self.start_level, self.backbone_end_level):
-            if i >= self.backbone_end_level-1:
-                l_conv = DA(
-                    in_channels[i],
-                    out_channels,
-                    pam_channels,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=norm_cfg,
-                    act_cfg=act_cfg)
-            else:
-                l_conv = ConvModule(
-                    in_channels[i],
-                    out_channels,
-                    1,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
-                    act_cfg=act_cfg,
-                    inplace=False)
+            l_conv = ConvModule(
+                in_channels[i],
+                out_channels,
+                1,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
+                act_cfg=act_cfg,
+                inplace=False)
             fpn_conv = ConvModule(
                 out_channels,
                 out_channels,
@@ -303,15 +294,27 @@ class FPN_DA(BaseModule):
                     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
 
+        self.pam = nn.ModuleList()
+        for i in range(len(self.lateral_convs)):
+            pam = PAM(in_channels[i], in_channels[i])
+            self.pam.append(pam)
+
     @auto_fp16()
     def forward(self, inputs):
         assert len(inputs) == len(self.in_channels)
 
+        laterals_da = [
+            pam(inputs[i])
+            for i, pam in enumerate(self.pam)
+        ]
+
         # build laterals
         laterals = [
-            lateral_conv(inputs[i + self.start_level])
+            lateral_conv(laterals_da[i + self.start_level])
             for i, lateral_conv in enumerate(self.lateral_convs)
         ]
+
+
 
         # build top-down path
         used_backbone_levels = len(laterals)
