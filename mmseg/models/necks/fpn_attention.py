@@ -593,11 +593,18 @@ class FPN_Attention(BaseModule):
                     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
 
+    def _transform_inputs(self, inputs):
+        inputs = [inputs[i] for i in range(len(inputs))]
+        return inputs
+
+
     @auto_fp16()
     def forward(self, inputs):
         assert len(inputs) == len(self.in_channels)
 
+        inputs = self._transform_inputs(inputs)
         hw_shape = []
+
         for i in range(len(inputs)):
             hw_shape.append(inputs[i].shape[2:])
             inputs[i] = inputs[i].flatten(2).transpose(1, 2)
