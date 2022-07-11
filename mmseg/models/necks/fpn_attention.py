@@ -512,7 +512,7 @@ class FPN_Attention(BaseModule):
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
 
-        for i in range(self.start_level, self.backbone_end_level):
+        for i in range(self.num_ins):
 
             l_conv = SwinBlockSequence(
                 embed_dims=in_channels[i],
