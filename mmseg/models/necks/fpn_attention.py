@@ -509,12 +509,13 @@ class FPN_Attention(BaseModule):
             x.item() for x in torch.linspace(0, drop_path_rate, total_depth)
         ]
 
+        self.lateral_swins = nn.ModuleList()
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
 
         for i in range(self.num_ins):
 
-            l_conv = SwinBlockSequence(
+            l_swin = SwinBlockSequence(
                 embed_dims=in_channels[i],
                 num_heads=num_heads[i],
                 feedforward_channels=int(mlp_ratio * in_channels[i]),
@@ -531,8 +532,18 @@ class FPN_Attention(BaseModule):
                 with_cp=False,
                 init_cfg=None)
 
-            fpn_conv = ConvModule(
+            l_conv = ConvModule(
                 in_channels[i],
+                out_channels,
+                1,
+                conv_cfg=conv_cfg,
+                norm_cfg=None,
+                act_cfg=None,
+                inplace=False
+            )
+
+            fpn_conv = ConvModule(
+                out_channels,
                 out_channels,
                 3,
                 padding=1,
@@ -541,6 +552,7 @@ class FPN_Attention(BaseModule):
                 act_cfg=None,
                 inplace=False)
 
+            self.lateral_swins.append(l_swin)
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
 
@@ -561,13 +573,18 @@ class FPN_Attention(BaseModule):
             inputs[i] = inputs[i].flatten(2).transpose(1, 2)
 
         # build laterals
-        laterals = [
-            lateral_conv(inputs[i], hw_shape[i])
-            for i, lateral_conv in enumerate(self.lateral_convs)
+        laterals_swin = [
+            lateral_swin(inputs[i], hw_shape[i])
+            for i, lateral_swin in enumerate(self.lateral_swins)
         ]
 
-        for i in range(len(laterals)):
-            laterals[i] = laterals[i].view(-1, *hw_shape[i], laterals[i].shape[2]).permute(0, 3, 1, 2).contiguous()
+        for i in range(len(laterals_swin)):
+            laterals_swin[i] = laterals_swin[i].view(-1, *hw_shape[i], laterals_swin[i].shape[2]).permute(0, 3, 1, 2).contiguous()
+
+        laterals = [
+            laterals_conv(laterals_swin[i])
+            for i, laterals_conv in enumerate(self.lateral_convs)
+        ]
 
         # build top-down path
         used_backbone_levels = len(laterals)
