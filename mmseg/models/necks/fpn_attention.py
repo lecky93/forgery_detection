@@ -512,28 +512,28 @@ class FPN_Attention(BaseModule):
         self.lateral_swins = nn.ModuleList()
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
+        self.lateral_norms = nn.ModuleList()
 
         for i in range(self.num_ins):
 
-            l_swin = nn.Sequential(
-                SwinBlockSequence(
-                    embed_dims=in_channels[i],
-                    num_heads=num_heads[i],
-                    feedforward_channels=int(mlp_ratio * in_channels[i]),
-                    depth=depths[i],
-                    window_size=window_size,
-                    qkv_bias=qkv_bias,
-                    qk_scale=qk_scale,
-                    drop_rate=drop_rate,
-                    attn_drop_rate=attn_drop_rate,
-                    drop_path_rate=dpr[sum(depths[:i]):sum(depths[:i + 1])],
-                    upsample=None,
-                    act_cfg=act_cfg,
-                    norm_cfg=norm_cfg,
-                    with_cp=False,
-                    init_cfg=None),
-                build_norm_layer(norm_cfg, in_channels[i])[1]
-            )
+            l_swin = SwinBlockSequence(
+                embed_dims=in_channels[i],
+                num_heads=num_heads[i],
+                feedforward_channels=int(mlp_ratio * in_channels[i]),
+                depth=depths[i],
+                window_size=window_size,
+                qkv_bias=qkv_bias,
+                qk_scale=qk_scale,
+                drop_rate=drop_rate,
+                attn_drop_rate=attn_drop_rate,
+                drop_path_rate=dpr[sum(depths[:i]):sum(depths[:i + 1])],
+                upsample=None,
+                act_cfg=act_cfg,
+                norm_cfg=norm_cfg,
+                with_cp=False,
+                init_cfg=None)
+
+            l_norm = build_norm_layer(norm_cfg, in_channels[i])[1]
 
             l_conv = ConvModule(
                 in_channels[i],
@@ -558,6 +558,7 @@ class FPN_Attention(BaseModule):
             self.lateral_swins.append(l_swin)
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
+            self.lateral_norms.append(l_norm)
 
     def _transform_inputs(self, inputs):
         inputs = [inputs[i] for i in range(len(inputs))]
@@ -581,11 +582,16 @@ class FPN_Attention(BaseModule):
             for i, lateral_swin in enumerate(self.lateral_swins)
         ]
 
-        for i in range(len(laterals_swin)):
-            laterals_swin[i] = laterals_swin[i].view(-1, *hw_shape[i], laterals_swin[i].shape[2]).permute(0, 3, 1, 2).contiguous()
+        lateral_norm = [
+            lateral_swin(laterals_swin[i])
+            for i, lateral_swin in enumerate(self.lateral_norms)
+        ]
+
+        for i in range(len(lateral_norm)):
+            lateral_norm[i] = lateral_norm[i].view(-1, *hw_shape[i], lateral_norm[i].shape[2]).permute(0, 3, 1, 2).contiguous()
 
         laterals = [
-            laterals_conv(laterals_swin[i])
+            laterals_conv(lateral_norm[i])
             for i, laterals_conv in enumerate(self.lateral_convs)
         ]
 
