@@ -515,22 +515,25 @@ class FPN_Attention(BaseModule):
 
         for i in range(self.num_ins):
 
-            l_swin = SwinBlockSequence(
-                embed_dims=in_channels[i],
-                num_heads=num_heads[i],
-                feedforward_channels=int(mlp_ratio * in_channels[i]),
-                depth=depths[i],
-                window_size=window_size,
-                qkv_bias=qkv_bias,
-                qk_scale=qk_scale,
-                drop_rate=drop_rate,
-                attn_drop_rate=attn_drop_rate,
-                drop_path_rate=dpr[sum(depths[:i]):sum(depths[:i + 1])],
-                upsample=None,
-                act_cfg=act_cfg,
-                norm_cfg=norm_cfg,
-                with_cp=False,
-                init_cfg=None)
+            l_swin = nn.Sequential(
+                SwinBlockSequence(
+                    embed_dims=in_channels[i],
+                    num_heads=num_heads[i],
+                    feedforward_channels=int(mlp_ratio * in_channels[i]),
+                    depth=depths[i],
+                    window_size=window_size,
+                    qkv_bias=qkv_bias,
+                    qk_scale=qk_scale,
+                    drop_rate=drop_rate,
+                    attn_drop_rate=attn_drop_rate,
+                    drop_path_rate=dpr[sum(depths[:i]):sum(depths[:i + 1])],
+                    upsample=None,
+                    act_cfg=act_cfg,
+                    norm_cfg=norm_cfg,
+                    with_cp=False,
+                    init_cfg=None),
+                build_norm_layer(norm_cfg, in_channels[i])[1]
+            )
 
             l_conv = ConvModule(
                 in_channels[i],
