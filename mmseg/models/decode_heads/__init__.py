@@ -34,6 +34,7 @@ from .branch_fpn_head import BranchFPNHead
 from .smo_head import SMOHead
 from .swinunet_head import SwinTransformerUnetHead
 from .attention_head import AttentionHead
+from .uper_attention_head import UPerAttentionHead
 
 __all__ = [
     'FCNHead', 'PSPHead', 'ASPPHead', 'PSAHead', 'NLHead', 'GCHead', 'CCHead',
