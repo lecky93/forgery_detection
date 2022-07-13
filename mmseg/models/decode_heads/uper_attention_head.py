@@ -63,32 +63,33 @@ class UPerAttentionHead(BaseDecodeHead):
             act_cfg=self.act_cfg,
             align_corners=self.align_corners)
 
-        self.bottleneck_attention = SwinBlockSequence(
-                embed_dims=self.in_channels[3] + len(pool_scales) * self.channels,
-                num_heads=num_heads[3],
-                feedforward_channels=int(mlp_ratio * (self.in_channels[3] + len(pool_scales) * self.channels)),
-                depth=depths[3],
-                window_size=window_size,
-                qkv_bias=qkv_bias,
-                qk_scale=qk_scale,
-                drop_rate=drop_rate,
-                attn_drop_rate=attn_drop_rate,
-                drop_path_rate=dpr[sum(depths[:3]):sum(depths[:3 + 1])],
-                upsample=None,
-                act_cfg=self.act_cfg,
-                norm_cfg=self.norm_cfg,
-                with_cp=False,
-                init_cfg=None)
+        # self.bottleneck_attention = SwinBlockSequence(
+        #         embed_dims=self.in_channels[3] + len(pool_scales) * self.channels,
+        #         num_heads=num_heads[3],
+        #         feedforward_channels=int(mlp_ratio * (self.in_channels[3] + len(pool_scales) * self.channels)),
+        #         depth=depths[3],
+        #         window_size=window_size,
+        #         qkv_bias=qkv_bias,
+        #         qk_scale=qk_scale,
+        #         drop_rate=drop_rate,
+        #         attn_drop_rate=attn_drop_rate,
+        #         drop_path_rate=dpr[sum(depths[:3]):sum(depths[:3 + 1])],
+        #         upsample=None,
+        #         act_cfg=self.act_cfg,
+        #         norm_cfg=self.norm_cfg,
+        #         with_cp=False,
+        #         init_cfg=None)
 
         self.bottleneck = ConvModule(
             self.in_channels[-1] + len(pool_scales) * self.channels,
             self.channels,
-            1,
+            3,
+            padding=1,
             conv_cfg=self.conv_cfg,
             norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=self.act_cfg)
 
-        self.psp_norm = build_norm_layer(norm_cfg, self.in_channels[-1] + len(pool_scales) * self.channels)[1]
+        # self.psp_norm = build_norm_layer(norm_cfg, self.in_channels[-1] + len(pool_scales) * self.channels)[1]
 
         # FPN Module
         self.lateral_swins = nn.ModuleList()
@@ -157,11 +158,12 @@ class UPerAttentionHead(BaseDecodeHead):
         psp_outs.extend(self.psp_modules(x))
         psp_outs = torch.cat(psp_outs, dim=1)
 
-        hw_shape = psp_outs.shape[2:]
-        psp_outs = psp_outs.flatten(2).transpose(1, 2)
-        psp_outs = self.bottleneck_attention(psp_outs, hw_shape)
-        psp_outs = self.psp_norm(psp_outs)
-        psp_outs = psp_outs.view(-1, *hw_shape, psp_outs.shape[2]).permute(0, 3, 1, 2).contiguous()
+        # hw_shape = psp_outs.shape[2:]
+        # psp_outs = psp_outs.flatten(2).transpose(1, 2)
+        # psp_outs = self.bottleneck_attention(psp_outs, hw_shape)
+        # psp_outs = self.psp_norm(psp_outs)
+        # psp_outs = psp_outs.view(-1, *hw_shape, psp_outs.shape[2]).permute(0, 3, 1, 2).contiguous()
+
         output = self.bottleneck(psp_outs)
 
         return output
