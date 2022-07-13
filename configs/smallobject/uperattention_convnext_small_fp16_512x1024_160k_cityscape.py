@@ -11,7 +11,7 @@ model = dict(
     pretrained=None,
     backbone=dict(
         type='mmcls.ConvNeXt',
-        arch='base',
+        arch='small',
         out_indices=[0, 1, 2, 3],
         drop_path_rate=0.4,
         layer_scale_init_value=1.0,
@@ -21,10 +21,10 @@ model = dict(
             prefix='backbone.')),
     decode_head=dict(
         type='UPerAttentionHead',
-        in_channels=[128, 256, 512, 1024],
+        in_channels=[96, 192, 384, 768],
         in_index=[0, 1, 2, 3],
         pool_scales=(1, 2, 3, 6),
-        channels=512,
+        channels=384,
         depths=(2, 2, 2, 2),
         num_heads=(4, 8, 16, 32),
         num_classes=19,
@@ -33,7 +33,7 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
     auxiliary_head=dict(
         type='FCNHead',
-        in_channels=512,
+        in_channels=384,
         in_index=2,
         channels=256,
         num_convs=1,
@@ -76,8 +76,7 @@ lr_config = dict(
     by_epoch=False)
 
 # By default, models are trained on 8 GPUs with 2 images per GPU
-data = dict(samples_per_gpu=2,
-            workers_per_gpu=2)
+data = dict(samples_per_gpu=2)
 # fp16 settings
 optimizer_config = dict(type='Fp16OptimizerHook', loss_scale='dynamic')
 # fp16 placeholder
