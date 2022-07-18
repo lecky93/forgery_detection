@@ -88,3 +88,6 @@ log_config = dict(
         dict(type='TextLoggerHook', by_epoch=False),
         dict(type='TensorboardLoggerHook')
     ])
+
+checkpoint_config = dict(by_epoch=False, interval=8000)
+evaluation = dict(interval=8000, metric='mIoU')
