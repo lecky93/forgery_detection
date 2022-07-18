@@ -309,15 +309,14 @@ class AdaptiveFocalLovaszLoss(nn.Module):
         class_weight = torch.zeros((num_class,)).to(label.device)
         for class_id in range(num_class):
             fg = (label == class_id).float()
-            # custem_label = label.clone().detach()
-            # custem_label[custem_label != class_id] = 0
-            # custem_label[custem_label == class_id] = 1
             class_num_pixels = fg.sum()
             if class_num_pixels == 0:
                 class_weight[class_id] = 1.
             else:
                 class_weight[class_id] = (batch_size * H * W) / class_num_pixels
 
+
+        class_weight = F.sigmoid(class_weight)
 
         # if multi-class loss, transform logits to probs
         if self.cls_criterion == lovasz_softmax:

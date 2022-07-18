@@ -29,7 +29,7 @@ model = dict(
         num_classes=19,
         align_corners=False,
         loss_decode=[dict(type='CrossEntropyLoss', loss_name='loss_ce', loss_weight=1.0),
-                     dict(type='AdaptiveFocalLovaszLoss', loss_name='loss_afl', reduction='none', loss_weight=1.0)]),
+                     dict(type='AdaptiveFocalLovaszLoss', loss_name='loss_afl', reduction='none', loss_weight=3.0)]),
     auxiliary_head=dict(
         type='FCNHead',
         in_channels=512,
