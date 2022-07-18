@@ -316,7 +316,7 @@ class AdaptiveFocalLovaszLoss(nn.Module):
                 class_weight[class_id] = (batch_size * H * W) / class_num_pixels
 
 
-        class_weight = F.sigmoid(class_weight)
+        class_weight = torch.sigmoid(class_weight)
 
         # if multi-class loss, transform logits to probs
         if self.cls_criterion == lovasz_softmax:
