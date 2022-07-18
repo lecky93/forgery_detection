@@ -8,6 +8,7 @@ from .lovasz_loss import LovaszLoss
 from .utils import reduce_loss, weight_reduce_loss, weighted_loss
 
 from .cross_entropy_loss import AdaptiveCELoss
+from .adaptive_focallovasz_loss import AdaptiveFocalLovaszLoss
 
 __all__ = [
     'accuracy', 'Accuracy', 'cross_entropy', 'binary_cross_entropy',

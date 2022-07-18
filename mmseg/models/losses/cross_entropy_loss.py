@@ -368,7 +368,7 @@ class AdaptiveCELoss(nn.Module):
         reduction = (
             reduction_override if reduction_override else self.reduction)
 
-        # clculate adaptive class weight
+        # calculate adaptive class weight
         batch_size, num_class, H, W = cls_score.shape
         class_weight = torch.zeros((num_class,)).to(label.device)
         for class_id in range(num_class):

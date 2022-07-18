@@ -1,5 +1,7 @@
 import os
 import cv2
+import numpy as np
+import torch
 
 def suffix2jpg(ori_path, target_path):
     path = ori_path
@@ -78,5 +80,20 @@ def generate_splittxt():
             f2.write(name + '\n')
 
 if __name__ == '__main__':
-    mask2ann(r'D:\dataset\forgery\nist16\mask', r'D:\dataset\forgery\nist16\ann', convert=True, add_gt=True)
+    i = np.array([0, 0, 1, 0, 0])
+    d = np.array([1, 2, 3, 4, 5])
+    c = d
+    c[i != 1] = (1 - c[i != 1])
+
+
+
+    c = torch.tensor(c)
+
+    print(c)
+
+    c = torch.pow(1 - c, 2)
+
+    print(c)
+
+    # mask2ann(r'D:\dataset\forgery\nist16\mask', r'D:\dataset\forgery\nist16\ann', convert=True, add_gt=True)
     # ann2mask(r'D:\dataset\forgery\nist16\ann', r'D:\dataset\forgery\nist16\test')
