@@ -28,8 +28,7 @@ model = dict(
         num_heads=(4, 8, 16, 32),
         num_classes=19,
         align_corners=False,
-        loss_decode=[dict(type='CrossEntropyLoss', loss_name='loss_ce', loss_weight=1.0),
-                     dict(type='AdaptiveFocalLovaszLoss', loss_name='loss_afl', reduction='none', loss_weight=1.0)]),
+        loss_decode=dict(type='AdaptiveFocalLovaszLoss', loss_name='loss_lovasz', reduction='none', loss_weight=1.0)),
     auxiliary_head=dict(
         type='FCNHead',
         in_channels=512,
@@ -79,7 +78,6 @@ dataset_type = 'CityscapesDataset'
 data_root = '../dataset/cityscapes'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-crop_size = (512, 1024)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations'),
@@ -133,6 +131,7 @@ data = dict(
 optimizer_config = dict(type='Fp16OptimizerHook', loss_scale='dynamic')
 # fp16 placeholder
 fp16 = dict()
+
 
 log_config = dict(
     interval=50,

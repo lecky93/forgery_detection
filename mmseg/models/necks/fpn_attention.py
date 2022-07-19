@@ -540,7 +540,7 @@ class FPN_Attention(BaseModule):
                 out_channels,
                 1,
                 conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg,
+                norm_cfg=dict(type='SyncBN', requires_grad=True),
                 act_cfg=act_cfg,
                 inplace=False
             )
@@ -551,7 +551,7 @@ class FPN_Attention(BaseModule):
                 3,
                 padding=1,
                 conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg,
+                norm_cfg=dict(type='SyncBN', requires_grad=True),
                 act_cfg=act_cfg,
                 inplace=False)
 

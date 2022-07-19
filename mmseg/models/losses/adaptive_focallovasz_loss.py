@@ -162,10 +162,10 @@ def lovasz_softmax_flat(probs, labels, gamma=2.0, classes='present', class_weigh
         errors = (fg - class_pred).abs()
 
         # add focal
-        focal_weight = class_pred
-        focal_weight[fg != 1] = (1 - focal_weight[fg != 1])
-        focal_weight = torch.pow(1-focal_weight, gamma)
-        errors = errors * focal_weight
+        # focal_weight = class_pred
+        # focal_weight[fg != 1] = (1 - focal_weight[fg != 1])
+        # focal_weight = torch.pow(1-focal_weight, gamma)
+        # errors = errors * focal_weight
 
         errors_sorted, perm = torch.sort(errors, 0, descending=True)
         perm = perm.data
@@ -309,7 +309,7 @@ class AdaptiveFocalLovaszLoss(nn.Module):
         class_weight = torch.zeros((num_class,)).to(label.device)
         for class_id in range(num_class):
             fg = (label == class_id).float()
-            class_num_pixels = fg.sum()
+            class_num_pixels = fg.sum().float()
             if class_num_pixels == 0:
                 class_weight[class_id] = 1.
             else:
