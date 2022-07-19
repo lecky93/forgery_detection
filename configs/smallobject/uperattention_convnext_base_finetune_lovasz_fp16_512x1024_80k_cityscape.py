@@ -28,7 +28,7 @@ model = dict(
         num_heads=(4, 8, 16, 32),
         num_classes=19,
         align_corners=False,
-        loss_decode=dict(type='AdaptiveFocalLovaszLoss', loss_name='loss_lovasz', reduction='none', loss_weight=1.0)),
+        loss_decode=dict(type='LovaszLoss', loss_name='loss_lovasz', reduction='none', loss_weight=1.0)),
     auxiliary_head=dict(
         type='FCNHead',
         in_channels=512,
