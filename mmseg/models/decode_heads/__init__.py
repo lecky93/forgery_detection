@@ -35,6 +35,8 @@ from .smo_head import SMOHead
 from .swinunet_head import SwinTransformerUnetHead
 from .attention_head import AttentionHead
 from .uper_attention_head import UPerAttentionHead
+from .window_da_head import Window_DAHead
+from .swin_da_head import Swin_DAHead
 
 __all__ = [
     'FCNHead', 'PSPHead', 'ASPPHead', 'PSAHead', 'NLHead', 'GCHead', 'CCHead',
