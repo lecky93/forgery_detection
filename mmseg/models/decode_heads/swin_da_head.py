@@ -11,8 +11,36 @@ from .decode_head import BaseDecodeHead
 
 from mmseg.ops import SwinBlockSequence
 from mmseg.ops import resize
+from mmcv.cnn import build_norm_layer
 
 
+class BayarConv2d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=5, stride=1, padding=0):
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.minus1 = (torch.ones(self.in_channels, self.out_channels, 1) * -1.000)
+
+        super(BayarConv2d, self).__init__()
+        # only (kernel_size ** 2 - 1) trainable params as the center element is always -1
+        self.kernel = nn.Parameter(torch.rand(self.in_channels, self.out_channels, kernel_size ** 2 - 1),
+                                   requires_grad=True)
+
+
+    def bayarConstraint(self):
+        self.kernel.data = self.kernel.permute(2, 0, 1)
+        self.kernel.data = torch.div(self.kernel.data, self.kernel.data.sum(0))
+        self.kernel.data = self.kernel.permute(1, 2, 0)
+        ctr = self.kernel_size ** 2 // 2
+        real_kernel = torch.cat((self.kernel[:, :, :ctr], self.minus1.to(self.kernel.device), self.kernel[:, :, ctr:]), dim=2)
+        real_kernel = real_kernel.reshape((self.out_channels, self.in_channels, self.kernel_size, self.kernel_size))
+        return real_kernel
+
+    def forward(self, x):
+        x = F.conv2d(x, self.bayarConstraint(), stride=self.stride, padding=self.padding)
+        return x
 
 class Swin_PAM(SwinBlockSequence):
     """Window Position Attention Module (PAM)
@@ -40,6 +68,7 @@ class Swin_PAM(SwinBlockSequence):
                 with_cp=False,
                 init_cfg=None)
 
+        self.norm = build_norm_layer(dict(type='LN'), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, x):
@@ -48,16 +77,19 @@ class Swin_PAM(SwinBlockSequence):
         hw_shape = (x.shape[2:])
         x_flatten = x.flatten(2).transpose(1, 2)
         out = super(Swin_PAM, self).forward(x_flatten, hw_shape)
+        out = self.norm(out)
         out = out.view(-1, *hw_shape, out.shape[2]).permute(0, 3, 1, 2).contiguous()
-        out = self.gamma(out) + x
+        out = self.gamma(out)
         return out
 
 
 class CAM(nn.Module):
     """Channel Attention Module (CAM)"""
 
-    def __init__(self):
+    def __init__(self, in_channels):
         super(CAM, self).__init__()
+
+        self.norm = build_norm_layer(dict(type='LN'), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, x):
@@ -70,11 +102,11 @@ class CAM(nn.Module):
             energy, -1, keepdim=True)[0].expand_as(energy) - energy
         attention = F.softmax(energy_new, dim=-1)
         proj_value = x.view(batch_size, channels, -1)
-
         out = torch.bmm(attention, proj_value)
+        out = self.norm(out)
         out = out.view(batch_size, channels, height, width)
 
-        out = self.gamma(out) + x
+        out = self.gamma(out)
         return out
 
 
@@ -99,8 +131,12 @@ class Swin_DAHead(BaseDecodeHead):
         self.lateral_pams = nn.ModuleList()
         self.lateral_cams = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
+        self.lateral_constrained_convs = nn.ModuleList()
 
         for i, in_channels in enumerate(self.in_channels):
+            lateral_constrained_conv = BayarConv2d(in_channels=in_channels, out_channels=in_channels, padding=2)
+            self.lateral_constrained_convs.append(lateral_constrained_conv)
+
             pam_in_conv = ConvModule(
                 in_channels,
                 in_channels,
@@ -164,6 +200,7 @@ class Swin_DAHead(BaseDecodeHead):
                 inplace=False)
             self.fpn_convs.append(fpn_conv)
 
+
         self.fpn_bottleneck = ConvModule(
             len(self.in_channels) * self.channels,
             self.channels,
@@ -197,13 +234,18 @@ class Swin_DAHead(BaseDecodeHead):
         """Forward function."""
         x = self._transform_inputs(inputs)
 
+        constraind_laterals = [
+            lateral_constrained(x[i])
+            for i, lateral_constrained in enumerate(self.lateral_constrained_convs)
+        ]
+
         pam_laterals = [
-            lateral_pam(x[i])
+            x[i] + lateral_pam(constraind_laterals[i])
             for i, lateral_pam in enumerate(self.lateral_pams)
         ]
 
         cam_laterals = [
-            lateral_cam(x[i])
+            x[i] + lateral_cam(constraind_laterals[i])
             for i, lateral_cam in enumerate(self.lateral_cams)
         ]
 
