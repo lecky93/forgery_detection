@@ -104,7 +104,7 @@ class CAM(nn.Module):
         attention = F.softmax(energy_new, dim=-1)
         proj_value = x.view(batch_size, channels, -1)
         out = torch.bmm(attention, proj_value)
-        out = out.view(batch_size, height, width, channels)
+        out = out.view(batch_size, channels, height, width)
         out = input + self.gamma(out)
         return out
 
