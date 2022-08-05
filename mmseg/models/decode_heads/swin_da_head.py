@@ -118,7 +118,7 @@ class Swin_DAHead(BaseDecodeHead):
         pam_channels (int): The channels of Position Attention Module(PAM).
     """
 
-    def __init__(self, depths=[2, 2, 18, 2], num_heads=[16, 16, 16, 16], **kwargs):
+    def __init__(self, depths=[2, 2, 2, 2], num_heads=[8, 8, 8, 8], **kwargs):
         super(Swin_DAHead, self).__init__(
             input_transform='multiple_select', **kwargs)
 
