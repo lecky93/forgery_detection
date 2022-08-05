@@ -89,12 +89,10 @@ class CAM(nn.Module):
 
     def __init__(self, in_channels):
         super(CAM, self).__init__()
-        self.constrained_conv = BayarConv2d(in_channels=in_channels, out_channels=in_channels, padding=2)
         self.gamma = Scale(0)
 
-    def forward(self, input):
+    def forward(self, x):
         """Forward function."""
-        x = self.constrained_conv(input)
         batch_size, channels, height, width = x.size()
         proj_query = x.view(batch_size, channels, -1)
         proj_key = x.view(batch_size, channels, -1).permute(0, 2, 1)
@@ -105,7 +103,7 @@ class CAM(nn.Module):
         proj_value = x.view(batch_size, channels, -1)
         out = torch.bmm(attention, proj_value)
         out = out.view(batch_size, channels, height, width)
-        out = input + self.gamma(out)
+        out = x + self.gamma(out)
         return out
 
 
