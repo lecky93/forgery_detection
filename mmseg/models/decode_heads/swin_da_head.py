@@ -89,9 +89,7 @@ class CAM(nn.Module):
 
     def __init__(self, in_channels):
         super(CAM, self).__init__()
-
         self.constrained_conv = BayarConv2d(in_channels=in_channels, out_channels=in_channels, padding=2)
-        self.norm = build_norm_layer(dict(type='LN'), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, input):
@@ -106,10 +104,7 @@ class CAM(nn.Module):
         attention = F.softmax(energy_new, dim=-1)
         proj_value = x.view(batch_size, channels, -1)
         out = torch.bmm(attention, proj_value)
-        out = out.permute(0, 2, 1)
-        out = self.norm(out)
-        out = out.view(batch_size, height, width, channels).permute(0, 3, 1, 2)
-
+        out = out.view(batch_size, height, width, channels)
         out = input + self.gamma(out)
         return out
 
