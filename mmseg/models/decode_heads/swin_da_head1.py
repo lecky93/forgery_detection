@@ -216,25 +216,6 @@ class Swin_DAHead1(BaseDecodeHead):
             norm_cfg=self.norm_cfg,
             act_cfg=dict(type='GELU'))
 
-        self.pam_conv_seg = nn.Conv2d(
-            self.channels, self.num_classes, kernel_size=1)
-
-        self.cam_conv_seg = nn.Conv2d(
-            self.channels, self.num_classes, kernel_size=1)
-
-    def pam_cls_seg(self, feat):
-        """PAM feature classification."""
-        if self.dropout is not None:
-            feat = self.dropout(feat)
-        output = self.pam_conv_seg(feat)
-        return output
-
-    def cam_cls_seg(self, feat):
-        """CAM feature classification."""
-        if self.dropout is not None:
-            feat = self.dropout(feat)
-        output = self.cam_conv_seg(feat)
-        return output
 
     def forward(self, inputs):
         """Forward function."""
@@ -258,18 +239,6 @@ class Swin_DAHead1(BaseDecodeHead):
         for i in range(used_backbone_levels - 1, 0, -1):
             prev_shape = pam_laterals[i - 1].shape[2:]
 
-            # pam_laterals[i - 1] = pam_laterals[i - 1] + resize(
-            #     pam_laterals[i],
-            #     size=prev_shape,
-            #     mode='bilinear',
-            #     align_corners=self.align_corners)
-            #
-            # cam_laterals[i - 1] = cam_laterals[i - 1] + resize(
-            #     cam_laterals[i],
-            #     size=prev_shape,
-            #     mode='bilinear',
-            #     align_corners=self.align_corners)
-
             pam_cam_laterals[i - 1] = pam_cam_laterals[i - 1] + resize(
                 pam_cam_laterals[i],
                 size=prev_shape,
@@ -291,28 +260,6 @@ class Swin_DAHead1(BaseDecodeHead):
         fpn_outs = torch.cat(fpn_outs, dim=1)
         feats = self.fpn_bottleneck(fpn_outs)
 
-        # pam_out = self.pam_cls_seg(pam_laterals[0])
-        # cam_out = self.cam_cls_seg(cam_laterals[0])
         pam_cam_out = self.cls_seg(feats)
 
         return pam_cam_out
-
-    # def forward_test(self, inputs, img_metas, test_cfg):
-    #     """Forward function for testing, only ``pam_cam`` is used."""
-    #     return self.forward(inputs)[0]
-    #
-    # def losses(self, seg_logit, seg_label):
-    #     """Compute ``pam_cam``, ``pam``, ``cam`` loss."""
-    #     pam_cam_seg_logit, pam_seg_logit, cam_seg_logit = seg_logit
-    #     loss = dict()
-    #     loss.update(
-    #         add_prefix(
-    #             super(Swin_DAHead, self).losses(pam_cam_seg_logit, seg_label),
-    #             'pam_cam'))
-    #     loss.update(
-    #         add_prefix(
-    #             super(Swin_DAHead, self).losses(pam_seg_logit, seg_label), 'pam'))
-    #     loss.update(
-    #         add_prefix(
-    #             super(Swin_DAHead, self).losses(cam_seg_logit, seg_label), 'cam'))
-    #     return loss
