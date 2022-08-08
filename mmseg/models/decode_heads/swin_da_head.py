@@ -72,8 +72,8 @@ class Swin_PAM(SwinBlockSequence):
             in_channels,
             3,
             padding=1,
-            conv_cfg=self.conv_cfg,
-            norm_cfg=self.norm_cfg,
+            conv_cfg=None,
+            norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU')
         )
         self.conv_out = ConvModule(
@@ -81,8 +81,8 @@ class Swin_PAM(SwinBlockSequence):
             channels,
             3,
             padding=1,
-            conv_cfg=self.conv_cfg,
-            norm_cfg=self.norm_cfg,
+            conv_cfg=None,
+            norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU')
         )
         self.norm = build_norm_layer(dict(type='LN'), in_channels)[1]
@@ -112,18 +112,18 @@ class CAM(nn.Module):
             in_channels,
             3,
             padding=1,
-            conv_cfg=self.conv_cfg,
-            norm_cfg=self.norm_cfg,
+            conv_cfg=None,
+            norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU'))
         self.conv_out = ConvModule(
             in_channels,
             channels,
             3,
             padding=1,
-            conv_cfg=self.conv_cfg,
-            norm_cfg=self.norm_cfg,
+            conv_cfg=None,
+            norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU'))
-        self.norm = build_norm_layer(dict(type='BN'), in_channels)[1]
+        self.norm = build_norm_layer(dict(type='SyncBN', requires_grad=True), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, input):
