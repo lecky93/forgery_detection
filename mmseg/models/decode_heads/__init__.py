@@ -37,6 +37,7 @@ from .attention_head import AttentionHead
 from .uper_attention_head import UPerAttentionHead
 from .window_da_head import Window_DAHead
 from .swin_da_head import Swin_DAHead
+from .swin_da_head1 import Swin_DAHead1
 
 __all__ = [
     'FCNHead', 'PSPHead', 'ASPPHead', 'PSAHead', 'NLHead', 'GCHead', 'CCHead',

@@ -22,7 +22,7 @@ model = dict(
             type='Pretrained', checkpoint=checkpoint_file,
             prefix='backbone.')),
     decode_head=dict(
-        type='Swin_DAHead',
+        type='Swin_DAHead1',
         in_channels=[96, 192, 384, 768],
         in_index=[0, 1, 2, 3],
         channels=384,

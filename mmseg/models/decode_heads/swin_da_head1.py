@@ -76,6 +76,14 @@ class Swin_PAM(SwinBlockSequence):
             norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU')
         )
+        self.conv_mid = ConvModule(
+            in_channels,
+            in_channels,
+            3,
+            padding=1,
+            conv_cfg=None,
+            norm_cfg=dict(type='SyncBN', requires_grad=True),
+            act_cfg=dict(type='GELU'))
         self.conv_out = ConvModule(
             in_channels,
             channels,
@@ -97,6 +105,7 @@ class Swin_PAM(SwinBlockSequence):
         out = super(Swin_PAM, self).forward(x_flatten, hw_shape)
         out = self.norm(out)
         out = out.view(-1, *hw_shape, out.shape[2]).permute(0, 3, 1, 2).contiguous()
+        out = self.conv_mid(out)
         out = input + self.gamma(out)
         out = self.conv_out(out)
         return out
@@ -108,6 +117,14 @@ class CAM(nn.Module):
         super(CAM, self).__init__()
         self.constrained_conv = BayarConv2d(in_channels=in_channels, out_channels=in_channels, padding=2)
         self.conv_in = ConvModule(
+            in_channels,
+            in_channels,
+            3,
+            padding=1,
+            conv_cfg=None,
+            norm_cfg=dict(type='SyncBN', requires_grad=True),
+            act_cfg=dict(type='GELU'))
+        self.conv_mid = ConvModule(
             in_channels,
             in_channels,
             3,
@@ -143,13 +160,14 @@ class CAM(nn.Module):
         out = self.norm(out)
         out = out.permute(0, 2, 1)
         out = out.view(batch_size, channels, height, width)
+        out = self.conv_mid(out)
         out = input + self.gamma(out)
         out = self.conv_out(out)
         return out
 
 
 @HEADS.register_module()
-class Swin_DAHead(BaseDecodeHead):
+class Swin_DAHead1(BaseDecodeHead):
     """Dual Attention Network for Scene Segmentation.
 
     This head is the implementation of `DANet
@@ -240,17 +258,17 @@ class Swin_DAHead(BaseDecodeHead):
         for i in range(used_backbone_levels - 1, 0, -1):
             prev_shape = pam_laterals[i - 1].shape[2:]
 
-            pam_laterals[i - 1] = pam_laterals[i - 1] + resize(
-                pam_laterals[i],
-                size=prev_shape,
-                mode='bilinear',
-                align_corners=self.align_corners)
-
-            cam_laterals[i - 1] = cam_laterals[i - 1] + resize(
-                cam_laterals[i],
-                size=prev_shape,
-                mode='bilinear',
-                align_corners=self.align_corners)
+            # pam_laterals[i - 1] = pam_laterals[i - 1] + resize(
+            #     pam_laterals[i],
+            #     size=prev_shape,
+            #     mode='bilinear',
+            #     align_corners=self.align_corners)
+            #
+            # cam_laterals[i - 1] = cam_laterals[i - 1] + resize(
+            #     cam_laterals[i],
+            #     size=prev_shape,
+            #     mode='bilinear',
+            #     align_corners=self.align_corners)
 
             pam_cam_laterals[i - 1] = pam_cam_laterals[i - 1] + resize(
                 pam_cam_laterals[i],
@@ -273,28 +291,28 @@ class Swin_DAHead(BaseDecodeHead):
         fpn_outs = torch.cat(fpn_outs, dim=1)
         feats = self.fpn_bottleneck(fpn_outs)
 
-        pam_out = self.pam_cls_seg(pam_laterals[0])
-        cam_out = self.cam_cls_seg(cam_laterals[0])
+        # pam_out = self.pam_cls_seg(pam_laterals[0])
+        # cam_out = self.cam_cls_seg(cam_laterals[0])
         pam_cam_out = self.cls_seg(feats)
 
-        return pam_cam_out, pam_out, cam_out
+        return pam_cam_out
 
-    def forward_test(self, inputs, img_metas, test_cfg):
-        """Forward function for testing, only ``pam_cam`` is used."""
-        return self.forward(inputs)[0]
-
-    def losses(self, seg_logit, seg_label):
-        """Compute ``pam_cam``, ``pam``, ``cam`` loss."""
-        pam_cam_seg_logit, pam_seg_logit, cam_seg_logit = seg_logit
-        loss = dict()
-        loss.update(
-            add_prefix(
-                super(Swin_DAHead, self).losses(pam_cam_seg_logit, seg_label),
-                'pam_cam'))
-        loss.update(
-            add_prefix(
-                super(Swin_DAHead, self).losses(pam_seg_logit, seg_label), 'pam'))
-        loss.update(
-            add_prefix(
-                super(Swin_DAHead, self).losses(cam_seg_logit, seg_label), 'cam'))
-        return loss
+    # def forward_test(self, inputs, img_metas, test_cfg):
+    #     """Forward function for testing, only ``pam_cam`` is used."""
+    #     return self.forward(inputs)[0]
+    #
+    # def losses(self, seg_logit, seg_label):
+    #     """Compute ``pam_cam``, ``pam``, ``cam`` loss."""
+    #     pam_cam_seg_logit, pam_seg_logit, cam_seg_logit = seg_logit
+    #     loss = dict()
+    #     loss.update(
+    #         add_prefix(
+    #             super(Swin_DAHead, self).losses(pam_cam_seg_logit, seg_label),
+    #             'pam_cam'))
+    #     loss.update(
+    #         add_prefix(
+    #             super(Swin_DAHead, self).losses(pam_seg_logit, seg_label), 'pam'))
+    #     loss.update(
+    #         add_prefix(
+    #             super(Swin_DAHead, self).losses(cam_seg_logit, seg_label), 'cam'))
+    #     return loss
