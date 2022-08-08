@@ -275,26 +275,26 @@ class Swin_DAHead(BaseDecodeHead):
 
         # pam_out = self.pam_cls_seg(pam_laterals[0])
         # cam_out = self.cam_cls_seg(cam_laterals[0])
-        pam_cam_out = self.cls_seg(feats)
+        seg_logit = self.cls_seg(feats)
 
-        return pam_cam_out
+        return seg_logit
 
     # def forward_test(self, inputs, img_metas, test_cfg):
     #     """Forward function for testing, only ``pam_cam`` is used."""
     #     return self.forward(inputs)[0]
     #
-    def losses(self, seg_logit, seg_label):
-        """Compute ``pam_cam``, ``pam``, ``cam`` loss."""
-        pam_cam_seg_logit = seg_logit
-        loss = dict()
-        loss.update(
-            add_prefix(
-                super(Swin_DAHead, self).losses(pam_cam_seg_logit, seg_label),
-                'pam_cam'))
-        # loss.update(
-        #     add_prefix(
-        #         super(Swin_DAHead, self).losses(pam_seg_logit, seg_label), 'pam'))
-        # loss.update(
-        #     add_prefix(
-        #         super(Swin_DAHead, self).losses(cam_seg_logit, seg_label), 'cam'))
-        return loss
+    # def losses(self, seg_logit, seg_label):
+    #     """Compute ``pam_cam``, ``pam``, ``cam`` loss."""
+    #     pam_cam_seg_logit, pam_seg_logit, cam_seg_logit = seg_logit
+    #     loss = dict()
+    #     loss.update(
+    #         add_prefix(
+    #             super(Swin_DAHead, self).losses(pam_cam_seg_logit, seg_label),
+    #             'pam_cam'))
+    #     loss.update(
+    #         add_prefix(
+    #             super(Swin_DAHead, self).losses(pam_seg_logit, seg_label), 'pam'))
+    #     loss.update(
+    #         add_prefix(
+    #             super(Swin_DAHead, self).losses(cam_seg_logit, seg_label), 'cam'))
+    #     return loss
