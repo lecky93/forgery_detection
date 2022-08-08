@@ -196,7 +196,7 @@ class Swin_DAHead1(BaseDecodeHead):
             self.lateral_cams.append(cam)
 
             fpn_conv = ConvModule(
-                self.channels,
+                self.channels * 2,
                 self.channels,
                 3,
                 padding=1,
@@ -232,6 +232,11 @@ class Swin_DAHead1(BaseDecodeHead):
         ]
 
         pam_cam_laterals = pam_laterals + cam_laterals
+
+        pam_cam_laterals = [
+            torch.cat([pam_laterals[i], cam_laterals[i]], dim=1)
+            for i in range(len(x))
+        ]
 
         # build top-down path
         used_backbone_levels = len(x)
