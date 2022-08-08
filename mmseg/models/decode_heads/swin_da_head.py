@@ -123,7 +123,7 @@ class CAM(nn.Module):
             conv_cfg=None,
             norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU'))
-        self.norm = build_norm_layer(dict(type='SyncBN', requires_grad=True), in_channels)[1]
+        self.norm = build_norm_layer(dict(type='BN'), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, input):
