@@ -123,7 +123,7 @@ class CAM(nn.Module):
             conv_cfg=None,
             norm_cfg=dict(type='SyncBN', requires_grad=True),
             act_cfg=dict(type='GELU'))
-        self.norm = build_norm_layer(dict(type='BN'), in_channels)[1]
+        self.norm = build_norm_layer(dict(type='LN'), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, input):
@@ -139,8 +139,10 @@ class CAM(nn.Module):
         attention = F.softmax(energy_new, dim=-1)
         proj_value = x.view(batch_size, channels, -1)
         out = torch.bmm(attention, proj_value)
+        out = out.permute(0, 2, 1)
+        out = self.norm(out)
+        out = out.permute(0, 2, 1)
         out = out.view(batch_size, channels, height, width)
-        self.norm(out)
         out = input + self.gamma(out)
         out = self.conv_out(out)
         return out
