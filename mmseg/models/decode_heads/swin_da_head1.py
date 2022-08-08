@@ -178,7 +178,7 @@ class Swin_DAHead1(BaseDecodeHead):
     """
 
     def __init__(self, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], **kwargs):
-        super(Swin_DAHead, self).__init__(
+        super(Swin_DAHead1, self).__init__(
             input_transform='multiple_select', **kwargs)
 
         self.depths = depths
