@@ -6,7 +6,6 @@ from torch import nn
 
 from mmseg.core import add_prefix
 from ..builder import HEADS
-from ..utils import SelfAttentionBlock as _SelfAttentionBlock
 from .decode_head import BaseDecodeHead
 
 from mmseg.ops import SwinBlockSequence
@@ -50,7 +49,7 @@ class Swin_PAM(SwinBlockSequence):
         channels (int): Output channels of key/query transform.
     """
 
-    def __init__(self, in_channels, depth, num_head):
+    def __init__(self, in_channels, channels, depth, num_head):
         super(Swin_PAM, self).__init__(
                 embed_dims=in_channels,
                 depth=depth,
@@ -67,32 +66,70 @@ class Swin_PAM(SwinBlockSequence):
                 norm_cfg=dict(type='LN'),
                 with_cp=False,
                 init_cfg=None)
-
         self.constrained_conv = BayarConv2d(in_channels=in_channels, out_channels=in_channels, padding=2)
+        self.conv_in = ConvModule(
+            in_channels,
+            in_channels,
+            3,
+            padding=1,
+            conv_cfg=self.conv_cfg,
+            norm_cfg=self.norm_cfg,
+            act_cfg=dict(type='GELU')
+        )
+        self.conv_out = ConvModule(
+            in_channels,
+            channels,
+            3,
+            padding=1,
+            conv_cfg=self.conv_cfg,
+            norm_cfg=self.norm_cfg,
+            act_cfg=dict(type='GELU')
+        )
         self.norm = build_norm_layer(dict(type='LN'), in_channels)[1]
         self.gamma = Scale(0)
 
     def forward(self, input):
         """Forward function."""
         x = self.constrained_conv(input)
+        x = self.conv_in(x)
         hw_shape = (x.shape[2:])
         x_flatten = x.flatten(2).transpose(1, 2)
         out = super(Swin_PAM, self).forward(x_flatten, hw_shape)
         out = self.norm(out)
         out = out.view(-1, *hw_shape, out.shape[2]).permute(0, 3, 1, 2).contiguous()
         out = input + self.gamma(out)
+        out = self.conv_out(out)
         return out
-
 
 class CAM(nn.Module):
     """Channel Attention Module (CAM)"""
 
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, channels):
         super(CAM, self).__init__()
+        self.constrained_conv = BayarConv2d(in_channels=in_channels, out_channels=in_channels, padding=2)
+        self.conv_in = ConvModule(
+            in_channels,
+            in_channels,
+            3,
+            padding=1,
+            conv_cfg=self.conv_cfg,
+            norm_cfg=self.norm_cfg,
+            act_cfg=dict(type='GELU'))
+        self.conv_out = ConvModule(
+            in_channels,
+            channels,
+            3,
+            padding=1,
+            conv_cfg=self.conv_cfg,
+            norm_cfg=self.norm_cfg,
+            act_cfg=dict(type='GELU'))
+        self.norm = build_norm_layer(dict(type='BN'), in_channels)[1]
         self.gamma = Scale(0)
 
-    def forward(self, x):
+    def forward(self, input):
         """Forward function."""
+        x = self.constrained_conv(input)
+        x = self.conv_in(x)
         batch_size, channels, height, width = x.size()
         proj_query = x.view(batch_size, channels, -1)
         proj_key = x.view(batch_size, channels, -1).permute(0, 2, 1)
@@ -103,7 +140,9 @@ class CAM(nn.Module):
         proj_value = x.view(batch_size, channels, -1)
         out = torch.bmm(attention, proj_value)
         out = out.view(batch_size, channels, height, width)
-        out = x + self.gamma(out)
+        self.norm(out)
+        out = input + self.gamma(out)
+        out = self.conv_out(out)
         return out
 
 
@@ -118,7 +157,7 @@ class Swin_DAHead(BaseDecodeHead):
         pam_channels (int): The channels of Position Attention Module(PAM).
     """
 
-    def __init__(self, depths=[2, 2, 2, 2], num_heads=[8, 8, 8, 8], **kwargs):
+    def __init__(self, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], **kwargs):
         super(Swin_DAHead, self).__init__(
             input_transform='multiple_select', **kwargs)
 
@@ -130,57 +169,11 @@ class Swin_DAHead(BaseDecodeHead):
         self.fpn_convs = nn.ModuleList()
 
         for i, in_channels in enumerate(self.in_channels):
-            pam_in_conv = ConvModule(
-                in_channels,
-                self.channels,
-                3,
-                padding=1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=dict(type='GELU')
-            )
-            pam = Swin_PAM(self.channels, self.depths[i], self.num_heads[i])
-            pam_out_conv = ConvModule(
-                self.channels,
-                self.channels,
-                3,
-                padding=1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=dict(type='GELU')
-            )
+            pam = Swin_PAM(in_channels, self.channels, self.depths[i], self.num_heads[i])
+            self.lateral_pams.append(pam)
 
-            lateral_pam = nn.Sequential(
-                pam_in_conv,
-                pam,
-                pam_out_conv
-            )
-            self.lateral_pams.append(lateral_pam)
-
-            cam_in_conv = ConvModule(
-                in_channels,
-                self.channels,
-                3,
-                padding=1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=dict(type='GELU'))
-            cam = CAM(self.channels)
-            cam_out_conv = ConvModule(
-                self.channels,
-                self.channels,
-                3,
-                padding=1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=dict(type='GELU'))
-
-            lateral_cam = nn.Sequential(
-                cam_in_conv,
-                cam,
-                cam_out_conv
-            )
-            self.lateral_cams.append(lateral_cam)
+            cam = CAM(in_channels, self.channels)
+            self.lateral_cams.append(cam)
 
             fpn_conv = ConvModule(
                 self.channels,
