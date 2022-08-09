@@ -76,7 +76,7 @@ data = dict(
 # # fp16 placeholder
 # fp16 = dict()
 
-runner = dict(type='IterBasedRunner', max_iters=160000)
+runner = dict(type='IterBasedRunner', max_iters=80000)
 checkpoint_config = dict(by_epoch=False, interval=8000)
 evaluation = dict(interval=8000, metric=['mIoU', 'mFscore'], pre_eval=True)
 
