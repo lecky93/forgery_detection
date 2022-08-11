@@ -130,7 +130,7 @@ class DABlock(nn.Module):
         )
         if self.depth != 0:
             self.constrained_conv = BayarConv2d(in_channels=channels, out_channels=channels, padding=2)
-            self.pam = Swin_PAM(self.channels, self.depths, self.num_heads)
+            self.pam = Swin_PAM(self.channels, self.depth, self.num_head)
             self.cam = CAM(self.channels)
 
             self.conv_out = ConvModule(
