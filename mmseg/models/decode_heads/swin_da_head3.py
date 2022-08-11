@@ -133,16 +133,16 @@ class DABlock(nn.Module):
             self.pam = Swin_PAM(self.channels, self.depth, self.num_head)
             self.cam = CAM(self.channels)
 
-            # self.conv_out = ConvModule(
-            #     self.channels * 2,
-            #     self.channels,
-            #     3,
-            #     padding=1,
-            #     conv_cfg=self.conv_cfg,
-            #     norm_cfg=self.norm_cfg,
-            #     act_cfg=dict(type='GELU'),
-            #     inplace=False
-            # )
+            self.conv_out = ConvModule(
+                self.channels * 2,
+                self.channels,
+                3,
+                padding=1,
+                conv_cfg=self.conv_cfg,
+                norm_cfg=self.norm_cfg,
+                act_cfg=dict(type='GELU'),
+                inplace=False
+            )
 
     def forward(self, x):
         x = self.conv_in(x)
