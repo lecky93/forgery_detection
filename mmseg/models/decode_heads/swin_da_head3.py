@@ -177,7 +177,7 @@ class Swin_DAHead2(BaseDecodeHead):
         self.fpn_convs = nn.ModuleList()
 
         for i, in_channels in enumerate(self.in_channels):
-            da_block = DABlock(in_channels, self.channels, depths[i], num_heads[i])
+            da_block = DABlock(in_channels, self.channels, depths[i], num_heads[i], self.conv_cfg, self.norm_cfg)
             self.lateral_da.append(da_block)
             fpn_conv = ConvModule(
                 self.channels,
