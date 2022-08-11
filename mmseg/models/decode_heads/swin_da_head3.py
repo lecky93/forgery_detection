@@ -147,7 +147,7 @@ class DABlock(nn.Module):
     def forward(self, x):
         x = self.conv_in(x)
         if self.depth == 0:
-            return x
+            return x, x, x
         constrain = self.constrained_conv(x)
         pam_out = x + self.pam(constrain)
         cam_out = x + self.cam(constrain)
