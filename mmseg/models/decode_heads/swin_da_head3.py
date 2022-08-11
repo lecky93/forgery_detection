@@ -152,7 +152,7 @@ class DABlock(nn.Module):
         pam_out = x + self.pam(constrain)
         cam_out = x + self.cam(constrain)
         pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
-        pam_cam_out = self.conv(pam_cam_out)
+        pam_cam_out = self.conv_out(pam_cam_out)
         return pam_cam_out, pam_out, cam_out
 
 @HEADS.register_module()
