@@ -129,7 +129,7 @@ class DABlock(nn.Module):
             inplace=False
         )
         if self.depth != 0:
-            self.constrained_conv = BayarConv2d(in_channels=channels, out_channels=channels, padding=2)
+            # self.constrained_conv = BayarConv2d(in_channels=channels, out_channels=channels, padding=2)
             self.pam = Swin_PAM(self.channels, self.depth, self.num_head)
             self.cam = CAM(self.channels)
 
@@ -148,12 +148,12 @@ class DABlock(nn.Module):
         x = self.conv_in(x)
         if self.depth == 0:
             return x, x, x
-        constrain = self.constrained_conv(x)
-        pam_out = x + self.pam(constrain)
-        cam_out = x + self.cam(constrain)
-        pam_cam_out = pam_out + cam_out
-        # pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
-        # pam_cam_out = self.conv_out(pam_cam_out)
+        # constrain = self.constrained_conv(x)
+        pam_out = x + self.pam(x)
+        cam_out = x + self.cam(x)
+        # pam_cam_out = pam_out + cam_out
+        pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
+        pam_cam_out = self.conv_out(pam_cam_out)
         return pam_cam_out, pam_out, cam_out
 
 @HEADS.register_module()
