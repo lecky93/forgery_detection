@@ -133,16 +133,16 @@ class DABlock(nn.Module):
             self.pam = Swin_PAM(self.channels, self.depth, self.num_head)
             self.cam = CAM(self.channels)
 
-            self.conv_out = ConvModule(
-                self.channels * 2,
-                self.channels,
-                3,
-                padding=1,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                act_cfg=dict(type='GELU'),
-                inplace=False
-            )
+            # self.conv_out = ConvModule(
+            #     self.channels * 2,
+            #     self.channels,
+            #     3,
+            #     padding=1,
+            #     conv_cfg=self.conv_cfg,
+            #     norm_cfg=self.norm_cfg,
+            #     act_cfg=dict(type='GELU'),
+            #     inplace=False
+            # )
 
     def forward(self, x):
         x = self.conv_in(x)
@@ -151,8 +151,9 @@ class DABlock(nn.Module):
         constrain = self.constrained_conv(x)
         pam_out = x + self.pam(constrain)
         cam_out = x + self.cam(constrain)
-        pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
-        pam_cam_out = self.conv_out(pam_cam_out)
+        pam_cam_out = pam_out + cam_out
+        # pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
+        # pam_cam_out = self.conv_out(pam_cam_out)
         return pam_cam_out, pam_out, cam_out
 
 @HEADS.register_module()
