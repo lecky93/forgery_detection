@@ -108,7 +108,7 @@ class CAM(nn.Module):
         return out
 
 class DABlock(nn.Module):
-    def __init__(self, in_channels, channels, depth, num_head, conv_cfg, norm_cfg):
+    def __init__(self, in_channels, channels, depth, num_head, conv_cfg, norm_cfg, use_constrain):
         super(DABlock, self).__init__()
         self.in_channels = in_channels
         self.channels = channels
@@ -129,7 +129,9 @@ class DABlock(nn.Module):
             inplace=False
         )
         if self.depth != 0:
-            # self.constrained_conv = BayarConv2d(in_channels=channels, out_channels=channels, padding=2)
+            self.constrained_conv = None
+            if use_constrain:
+                self.constrained_conv = BayarConv2d(in_channels=channels, out_channels=channels, padding=2)
             self.pam = Swin_PAM(self.channels, self.depth, self.num_head)
             self.cam = CAM(self.channels)
 
@@ -148,9 +150,11 @@ class DABlock(nn.Module):
         x = self.conv_in(x)
         if self.depth == 0:
             return x, x, x
-        # constrain = self.constrained_conv(x)
-        pam_out = x + self.pam(x)
-        cam_out = x + self.cam(x)
+        constrain = x
+        if self.constrained_conv is not None:
+            constrain = self.constrained_conv(x)
+        pam_out = x + self.pam(constrain)
+        cam_out = x + self.cam(constrain)
         # pam_cam_out = pam_out + cam_out
         pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
         pam_cam_out = self.conv_out(pam_cam_out)
@@ -167,7 +171,7 @@ class Swin_DAHead2(BaseDecodeHead):
         pam_channels (int): The channels of Position Attention Module(PAM).
     """
 
-    def __init__(self, depths=[0, 2, 18, 2], num_heads=[4, 8, 16, 32], **kwargs):
+    def __init__(self, depths=[0, 2, 18, 2], num_heads=[4, 8, 16, 32], use_constrain=False, **kwargs):
         super(Swin_DAHead2, self).__init__(
             input_transform='multiple_select', **kwargs)
 
@@ -178,7 +182,7 @@ class Swin_DAHead2(BaseDecodeHead):
         self.fpn_convs = nn.ModuleList()
 
         for i, in_channels in enumerate(self.in_channels):
-            da_block = DABlock(in_channels, self.channels, depths[i], num_heads[i], self.conv_cfg, self.norm_cfg)
+            da_block = DABlock(in_channels, self.channels, depths[i], num_heads[i], self.conv_cfg, self.norm_cfg, use_constrain)
             self.lateral_da.append(da_block)
             fpn_conv = ConvModule(
                 self.channels,
