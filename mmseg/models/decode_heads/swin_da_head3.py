@@ -154,7 +154,7 @@ class DABlock(nn.Module):
         if self.constrained_conv is not None:
             constrain = self.constrained_conv(x)
         pam_out = x + self.pam(constrain)
-        cam_out = x + self.cam(constrain)
+        cam_out = x + self.cam(x)
         # pam_cam_out = pam_out + cam_out
         pam_cam_out = torch.cat([pam_out, cam_out], dim=1)
         pam_cam_out = self.conv_out(pam_cam_out)
