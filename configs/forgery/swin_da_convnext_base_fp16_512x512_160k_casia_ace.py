@@ -32,7 +32,7 @@ model = dict(
         use_constrain=True,
         align_corners=False,
         loss_decode=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+            type='AdaptiveCELoss', use_sigmoid=False, loss_weight=1.0)),
 
     # model training and testing settings
     train_cfg=dict(),
@@ -42,8 +42,7 @@ optimizer = dict(
     constructor='LearningRateDecayOptimizerConstructor',
     _delete_=True,
     type='AdamW',
-    # lr=0.0001,
-    lr=1e-7,
+    lr=0.0001,
     betas=(0.9, 0.999),
     weight_decay=0.05,
     paramwise_cfg={

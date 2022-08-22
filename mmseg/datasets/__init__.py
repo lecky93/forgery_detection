@@ -21,6 +21,7 @@ from .voc import PascalVOCDataset
 
 from .casia import CasiaDataset
 from .casia_fine import CasiaFineDataset
+from .defacto import DefactoDataset
 
 __all__ = [
     'CustomDataset', 'build_dataloader', 'ConcatDataset', 'RepeatDataset',

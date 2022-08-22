@@ -41,66 +41,74 @@ dataset_casia_train = dict(
 )
 
 dataset_defacto_copy_move_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/copy-move/copymove_img/img',
-    ann_dir='defacto/copy-move/copymove_annotations/probe_mask',
+    ann_dir='defacto/copy-move/copymove_annotations/probe_ann',
+    pipeline=train_pipeline
+)
+
+dataset_defacto_inpainting_train = dict(
+    type='DefactoDataset',
+    data_root=data_root,
+    img_dir='defacto/inpainting/inpainting_img/img',
+    ann_dir='defacto/inpainting/inpainting_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice1_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_1_img/img',
-    ann_dir='defacto/splice/splicing_1_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_1_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice2_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_2_img/img',
-    ann_dir='defacto/splice/splicing_2_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_2_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice3_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_3_img/img',
-    ann_dir='defacto/splice/splicing_3_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_3_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice4_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_4_img/img',
-    ann_dir='defacto/splice/splicing_4_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_4_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice5_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_5_img/img',
-    ann_dir='defacto/splice/splicing_5_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_5_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice6_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_6_img/img',
-    ann_dir='defacto/splice/splicing_6_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_6_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
 dataset_defacto_splice7_train = dict(
-    type=dataset_type,
+    type='DefactoDataset',
     data_root=data_root,
     img_dir='defacto/splice/splicing_7_img/img',
-    ann_dir='defacto/splice/splicing_7_annotations/probe_mask',
+    ann_dir='defacto/splice/splicing_7_annotations/probe_ann',
     pipeline=train_pipeline
 )
 
@@ -110,6 +118,7 @@ data = dict(
     train=[
         dataset_casia_train,
         dataset_defacto_copy_move_train,
+        dataset_defacto_inpainting_train,
         dataset_defacto_splice1_train,
         dataset_defacto_splice2_train,
         dataset_defacto_splice3_train,
