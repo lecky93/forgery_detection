@@ -75,9 +75,9 @@ optimizer_config = dict(type='Fp16OptimizerHook', loss_scale='dynamic')
 # fp16 placeholder
 fp16 = dict()
 
-runner = dict(type='IterBasedRunner', max_iters=320000)
-checkpoint_config = dict(by_epoch=False, interval=16000)
-evaluation = dict(interval=16000, metric=['mIoU', 'mFscore'], pre_eval=True)
+runner = dict(type='IterBasedRunner', max_iters=80000)
+checkpoint_config = dict(by_epoch=False, interval=8000)
+evaluation = dict(interval=8000, metric=['mIoU', 'mFscore'], pre_eval=True)
 
 log_config = dict(
     interval=50,
