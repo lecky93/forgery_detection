@@ -42,8 +42,7 @@ optimizer = dict(
     constructor='LearningRateDecayOptimizerConstructor',
     _delete_=True,
     type='AdamW',
-    # lr=0.0001,
-    lr=1e-7,
+    lr=0.0001,
     betas=(0.9, 0.999),
     weight_decay=0.05,
     paramwise_cfg={
@@ -66,18 +65,18 @@ lr_config = dict(
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
-    # test=dict(
-    #     split='CASIA1/splicing.txt'
-    # )
+    train=dict(
+        img_dir='CASIA2/image_cut',
+        ann_dir='CASIA2/ann_cut')
 )
 # fp16 settings
 optimizer_config = dict(type='Fp16OptimizerHook', loss_scale='dynamic')
 # fp16 placeholder
 fp16 = dict()
 
-runner = dict(type='IterBasedRunner', max_iters=80000)
-checkpoint_config = dict(by_epoch=False, interval=8000)
-evaluation = dict(interval=8000, metric=['mIoU', 'mFscore'], pre_eval=True)
+runner = dict(type='IterBasedRunner', max_iters=160000)
+checkpoint_config = dict(by_epoch=False, interval=16000)
+evaluation = dict(interval=16000, metric=['mIoU', 'mFscore'], pre_eval=True)
 
 log_config = dict(
     interval=50,

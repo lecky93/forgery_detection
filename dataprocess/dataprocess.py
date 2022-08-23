@@ -98,6 +98,6 @@ if __name__ == '__main__':
     # mask2ann(r'D:\dataset\forgery\nist16\mask', r'D:\dataset\forgery\nist16\ann', convert=True, add_gt=True)
     # ann2mask(r'D:\dataset\forgery\nist16\ann', r'D:\dataset\forgery\nist16\test')
 
-    mask2ann(r'D:\workspace\python\dataset\forgery\defacto\inpainting\inpainting_annotations\probe_mask',
-             r'D:\workspace\python\dataset\forgery\defacto\inpainting\inpainting_annotations\probe_ann',
-             convert=False, add_gt=True)
+    mask2ann(r'D:\workspace\python\dataset\forgery\casia\CASIA2\mask_cut',
+             r'D:\workspace\python\dataset\forgery\casia\CASIA2\ann_cut',
+             convert=False, add_gt=False)
