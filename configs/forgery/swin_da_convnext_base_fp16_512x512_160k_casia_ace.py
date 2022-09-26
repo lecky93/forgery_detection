@@ -66,7 +66,7 @@ lr_config = dict(
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
-    test=dict(
+    val=dict(
         img_dir='CASIA1/image_gaussianBlur_5',
         # img='CASIA1/splicing.txt'
     )
