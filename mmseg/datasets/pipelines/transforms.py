@@ -8,6 +8,7 @@ from numpy import random
 
 from ..builder import PIPELINES
 
+import albumentations as A
 
 @PIPELINES.register_module()
 class ResizeToMultiple(object):
@@ -1332,4 +1333,31 @@ class RandomMosaic(object):
         repr_str += f'center_ratio_range={self.center_ratio_range}, '
         repr_str += f'pad_val={self.pad_val}, '
         repr_str += f'seg_pad_val={self.pad_val})'
+        return repr_str
+
+
+
+
+
+@PIPELINES.register_module()
+class RandomAlbu(object):
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, results):
+
+        transforms = A.Compose([
+            A.OneOf([
+                A.JpegCompression(quality_lower=50, quality_upper=100),
+                A.GaussianBlur(blur_limit=(3, 29)),
+            ], p=0.5)
+        ])
+
+        img = results['img']
+        img = transforms(image=np.array(img))['image']
+        results['img'] = img
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
         return repr_str

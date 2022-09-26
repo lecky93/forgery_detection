@@ -36,7 +36,8 @@ model = dict(
 
     # model training and testing settings
     train_cfg=dict(),
-    test_cfg=dict(mode='slide', crop_size=crop_size, stride=(341, 341)))
+    # test_cfg=dict(mode='slide', crop_size=crop_size, stride=(341, 341)))
+    test_cfg=dict(mode='whole'))
 
 optimizer = dict(
     constructor='LearningRateDecayOptimizerConstructor',
@@ -65,9 +66,10 @@ lr_config = dict(
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
-    # test=dict(
-    #     split='CASIA1/splicing.txt'
-    # )
+    test=dict(
+        img_dir='CASIA1/image_gaussianBlur_5',
+        # img='CASIA1/splicing.txt'
+    )
 )
 # fp16 settings
 optimizer_config = dict(type='Fp16OptimizerHook', loss_scale='dynamic')

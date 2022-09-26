@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/casia.py',
+    '../_base_/datasets/imd2020.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
 
@@ -65,9 +65,13 @@ lr_config = dict(
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
-    train=dict(
-        img_dir='CASIA2/image_cut',
-        ann_dir='CASIA2/ann_cut')
+    # train=dict(
+    #     img_dir='CASIA2/image_cut',
+    #     ann_dir='CASIA2/ann_cut'),
+    #
+    # test=dict(
+    #     img_dir='CASIA2/image',
+    #     ann_dir='CASIA2/ann')
 )
 # fp16 settings
 optimizer_config = dict(type='Fp16OptimizerHook', loss_scale='dynamic')
