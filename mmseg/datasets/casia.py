@@ -61,7 +61,7 @@ class CasiaDataset(CustomDataset):
             # But the index range of output is from 0 to 149.
             # That is because we set reduce_zero_label=True.
             # result = result + 1
-
+            result[result == 1] = 255
             output = Image.fromarray(result.astype(np.uint8))
             output.save(png_filename)
             result_files.append(png_filename)

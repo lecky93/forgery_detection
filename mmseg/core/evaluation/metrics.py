@@ -86,7 +86,6 @@ def intersect_and_union(pred_label,
         label.float(), bins=(num_classes), min=0, max=num_classes - 1)
     area_union = area_pred_label + area_label - area_intersect
 
-    auc = 0
     # prob = logit[0, 1, :]
     # prob = prob[mask]
     # label = label.cpu().numpy()
@@ -98,7 +97,7 @@ def intersect_and_union(pred_label,
     # FPR, TPR, thresholds = roc_curve(pred_label, prob)
     # AUC = auc(FPR, TPR)
 
-    return area_intersect, area_union, area_pred_label, area_label, auc
+    return area_intersect, area_union, area_pred_label, area_label
 
 
 def total_intersect_and_union(results,
@@ -330,17 +329,15 @@ def pre_eval_to_metrics(pre_eval_results,
     # [(A_1, B_1, C_1, D_1), ...,  (A_n, B_n, C_n, D_n)] to
     # ([A_1, ..., A_n], ..., [D_1, ..., D_n])
     pre_eval_results = tuple(zip(*pre_eval_results))
-    # assert len(pre_eval_results) == 4
+    assert len(pre_eval_results) == 4
 
     total_area_intersect = sum(pre_eval_results[0])
     total_area_union = sum(pre_eval_results[1])
     total_area_pred_label = sum(pre_eval_results[2])
     total_area_label = sum(pre_eval_results[3])
-    average_auc = sum(pre_eval_results[4]) / len(pre_eval_results[4])
 
     ret_metrics = total_area_to_metrics(total_area_intersect, total_area_union,
                                         total_area_pred_label, total_area_label,
-                                        average_auc,
                                         metrics, nan_to_num,
                                         beta)
 
@@ -351,7 +348,6 @@ def total_area_to_metrics(total_area_intersect,
                           total_area_union,
                           total_area_pred_label,
                           total_area_label,
-                          average_auc,
                           metrics=['mIoU'],
                           nan_to_num=None,
                           beta=1):
@@ -380,13 +376,11 @@ def total_area_to_metrics(total_area_intersect,
 
     all_acc = total_area_intersect.sum() / total_area_label.sum()
     ret_metrics = OrderedDict({'aAcc': all_acc})
-    ret_metrics['Auc'] = torch.tensor(average_auc)
     for metric in metrics:
         if metric == 'mIoU':
             iou = total_area_intersect / total_area_union
             acc = total_area_intersect / total_area_label
             ret_metrics['IoU'] = iou
-            ret_metrics['Acc'] = acc
         elif metric == 'mDice':
             dice = 2 * total_area_intersect / (
                 total_area_pred_label + total_area_label)

@@ -1350,7 +1350,7 @@ class RandomAlbu(object):
             A.OneOf([
                 A.JpegCompression(quality_lower=50, quality_upper=100),
                 A.GaussianBlur(blur_limit=(3, 29)),
-            ], p=0.5)
+            ], p=self.p)
         ])
 
         img = results['img']
