@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/imd2020.py',
+    '../_base_/datasets/casia.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
 
@@ -22,14 +22,14 @@ model = dict(
             type='Pretrained', checkpoint=checkpoint_file,
             prefix='backbone.')),
     decode_head=dict(
-        type='DAHead',
-        in_channels=1024,
-        in_index=3,
+        type='Swin_DAHead2',
+        in_channels=[128, 256, 512, 1024],
+        in_index=[0, 1, 2, 3],
         channels=512,
-        pam_channels=64,
         dropout_ratio=0.1,
         num_classes=2,
         norm_cfg=norm_cfg,
+        use_constrain=False,
         align_corners=False,
         loss_decode=dict(
             type='AdaptiveCELoss', use_sigmoid=False, loss_weight=1.0)),
