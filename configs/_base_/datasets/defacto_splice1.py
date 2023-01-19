@@ -136,6 +136,6 @@ data = dict(
     test=dict(
         type='DefactoDataset',
         data_root=data_root,
-        img_dir='defacto/splice/splicing_1_img',
+        img_dir='defacto/splice/splicing_1_img/img',
         ann_dir='defacto/splice/splicing_1_annotations/probe_ann',
         pipeline=test_pipeline))
