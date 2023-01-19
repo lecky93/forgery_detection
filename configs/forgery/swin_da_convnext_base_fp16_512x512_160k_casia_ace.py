@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/columbia.py',
+    '../_base_/datasets/defacto_splice1.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
 

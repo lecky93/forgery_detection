@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/casia.py',
+    '../_base_/datasets/imd2020.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
 
